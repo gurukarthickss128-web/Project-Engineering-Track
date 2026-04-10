@@ -1,19 +1,17 @@
 const express = require("express");
 const cors = require("cors");
+const fetch = require("node-fetch");
 require("dotenv").config();
 
 const app = express();
 
-// middleware
 app.use(cors());
 app.use(express.json());
 
-// health check route (optional but useful)
 app.get("/", (req, res) => {
   res.send("AI Chatbot Backend is running 🚀");
 });
 
-// chat route
 app.post("/chat", async (req, res) => {
   try {
     const { messages } = req.body;
@@ -27,7 +25,7 @@ app.post("/chat", async (req, res) => {
       {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -39,9 +37,8 @@ app.post("/chat", async (req, res) => {
 
     const data = await response.json();
 
-    // safety check
-    if (!data.choices || !data.choices.length) {
-      return res.status(500).json({ error: "Invalid response from AI" });
+    if (!data.choices?.length) {
+      return res.status(500).json({ error: "Invalid AI response" });
     }
 
     res.json({
@@ -49,14 +46,13 @@ app.post("/chat", async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Server error:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// start server
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
