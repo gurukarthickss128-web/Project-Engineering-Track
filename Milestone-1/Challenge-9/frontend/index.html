@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TODO List</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: linear-gradient(135deg, #e9f0ff, #f7f7ff);
+      display: flex;
+      justify-content: center;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 65%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: 0.2s;
+    }
+
+    input:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 6px rgba(74, 144, 226, 0.3);
+    }
+
+    button {
+      padding: 10px 12px;
+      margin-left: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+
+    /* Add button */
+    button[onclick="createItem()"] {
+      background: #4a90e2;
+      color: white;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    li {
+      background: #ffffff;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    li button {
+      font-size: 12px;
+    }
+
+    li button:nth-child(2) {
+      background: #ffa726;
+      color: white;
+    }
+
+    li button:nth-child(3) {
+      background: #66bb6a;
+      color: white;
+    }
+
+    li button:nth-child(4) {
+      background: #ef5350;
+      color: white;
+    }
+
+    #loading {
+      text-align: center;
+      color: gray;
+      margin-top: 10px;
+    }
+
+    body > * {
+      max-width: 500px;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <h1>TODO List</h1>
+
+    <input id="name" placeholder="Item name" />
+    <button onclick="createItem()">Add</button>
+
+    <p id="loading"></p>
+
+    <ul id="list"></ul>
+  </div>
+
+  <script>
+    const API = "https://crud-ship.onrender.com";
+
+    const list = document.getElementById("list");
+    const loading = document.getElementById("loading");
+
+    async function fetchItems() {
+      try {
+        loading.innerText = "Loading...";
+
+        const res = await fetch(`${API}/items`);
+        const data = await res.json();
+
+        list.innerHTML = "";
+
+        data.forEach(item => {
+          const li = document.createElement("li");
+
+          li.innerHTML = `
+            ${item.name}
+            <button onclick="editItem('${item._id}', \`${item.name}\`)">Edit</button>
+            <button onclick="deleteItem('${item._id}')">Completed</button>
+            <button onclick="deleteItem('${item._id}')">Delete</button>
+          `;
+
+          list.appendChild(li);
+        });
+
+        loading.innerText = "";
+
+      } catch (err) {
+        loading.innerText = "Error loading data ❌";
+      }
+    }
+
+    async function createItem() {
+      const input = document.getElementById("name");
+      const name = input.value.trim();
+
+      if (!name) return alert("Enter a name");
+
+      await fetch(`${API}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+
+      input.value = "";
+      fetchItems();
+    }
+
+    async function editItem(id, oldName) {
+      const newName = prompt("Edit item:", oldName);
+      if (!newName) return;
+
+      await fetch(`${API}/items/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() })
+      });
+
+      fetchItems();
+    }
+
+    async function deleteItem(id) {
+      await fetch(`${API}/items/${id}`, {
+        method: "DELETE"
+      });
+
+      fetchItems();
+    }
+
+    fetchItems();
+  </script>
+</body>
+</html>
